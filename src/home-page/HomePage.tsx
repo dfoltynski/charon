@@ -155,7 +155,6 @@ export const HomePage = () => {
   const [branch, setBranch] = useState<string>("");
   const [hasError, setHasError] = useState(false);
 
-
   useEffect(() => {
     (async () => {
       try {
@@ -189,8 +188,11 @@ export const HomePage = () => {
   }, []);
 
   const validateBranchDebounced = useValidateBranchDebounced({
-    branch, selectedProject, setInvalidBranch, wait: 500
-  })
+    branch,
+    selectedProject,
+    setInvalidBranch,
+    wait: 500,
+  });
 
   const updateBranch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
@@ -198,6 +200,7 @@ export const HomePage = () => {
     if (next.length > 0) validateBranchDebounced.current?.(next);
   };
 
+  const deploy = () => {};
 
   if (isLoading) {
     return <>Loading...</>;
@@ -255,7 +258,9 @@ export const HomePage = () => {
           Staging
         </div>
       </div>
-      <button className={styles.deployButton}>Deploy!</button>
+      <button className={styles.deployButton} onClick={deploy}>
+        Deploy!
+      </button>
 
       <History />
     </>
