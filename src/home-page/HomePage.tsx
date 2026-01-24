@@ -1,6 +1,6 @@
 import { css } from "@emotion/css";
 import axios from "axios";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { GITHUB_ORGANIZATION_NAME, GITHUB_TOKEN } from "../utils/environment-variables";
 import { History } from "../components/history/History";
 import { debounce } from "../utils/debounce";
@@ -150,6 +150,7 @@ export const HomePage = () => {
     const [invalidBranch, setInvalidBranch] = useState(false);
     const isPreview = environment === "preview";
     const [branch, setBranch] = useState<string>("");
+    const [hasError, setHasError] = useState(false);
 
     const updateBranch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const next = e.target.value;
@@ -198,8 +199,9 @@ export const HomePage = () => {
                     }))
                 );
                 setIsLoading(false);
+                setHasError(false);
             } catch (e) {
-                alert(e);
+                setHasError(true);
                 setIsLoading(false);
             }
         })()
@@ -207,6 +209,10 @@ export const HomePage = () => {
 
     if (isLoading) {
         return <>Loading...</>
+    }
+    
+    if(hasError) {
+        return <>An error has occured... Check configuration</>
     }
 
     return (
