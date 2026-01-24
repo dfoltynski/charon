@@ -2,11 +2,11 @@ import { css } from "@emotion/css";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { History } from "../components/history/History";
-import { debounce } from "../utils/debounce";
 import {
   GITHUB_ORGANIZATION_NAME,
   GITHUB_TOKEN,
 } from "../utils/environment-variables";
+import { useValidateBranchDebounced } from "./hooks/useValidateBranchDebounced";
 
 const styles = {
   projectSelectorContainer: css({
@@ -155,27 +155,6 @@ export const HomePage = () => {
   const [branch, setBranch] = useState<string>("");
   const [hasError, setHasError] = useState(false);
 
-  const updateBranch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const next = e.target.value;
-    setBranch(next);
-    if (next.length > 0) validateBranchDebounced(next);
-  };
-
-  const validateBranchDebounced = debounce(async (branch: string) => {
-    try {
-      const res = await axios(
-        `https://api.github.com/repos/${GITHUB_ORGANIZATION_NAME}/${selectedProject}/branches/${branch}`,
-      );
-      console.log("asdasd", res.status);
-      if (res.status !== 200) {
-        setInvalidBranch(true);
-      } else {
-        setInvalidBranch(false);
-      }
-    } catch (_e) {
-      setInvalidBranch(true);
-    }
-  }, 500);
 
   useEffect(() => {
     (async () => {
@@ -201,12 +180,24 @@ export const HomePage = () => {
         );
         setIsLoading(false);
         setHasError(false);
+        setSelectedProject(res.data[0].name);
       } catch (_e) {
         setHasError(true);
         setIsLoading(false);
       }
     })();
   }, []);
+
+  const validateBranchDebounced = useValidateBranchDebounced({
+    branch, selectedProject, setInvalidBranch, wait: 500
+  })
+
+  const updateBranch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = e.target.value;
+    setBranch(next);
+    if (next.length > 0) validateBranchDebounced.current?.(next);
+  };
+
 
   if (isLoading) {
     return <>Loading...</>;
