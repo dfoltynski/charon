@@ -1,3 +1,3 @@
 export const History = () => {
-    return <>History...</>
-}
+  return <>History...</>;
+};
