@@ -1,7 +1,10 @@
 import { css } from "@emotion/css";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { History } from "../components/history/History";
+import { GITHUB_API_URL } from "../config";
+import { useValidateGithubAccessToken } from "../login-page/hooks/useValidateGithubAccessToken";
 import {
   GITHUB_ORGANIZATION_NAME,
   GITHUB_TOKEN,
@@ -154,13 +157,18 @@ export const HomePage = () => {
   const isPreview = environment === "preview";
   const [branch, setBranch] = useState<string>("");
   const [hasError, setHasError] = useState(false);
+  const navigate = useNavigate();
+  const isTokenValid = useValidateGithubAccessToken();
+  if (!isTokenValid) {
+    navigate("/login");
+  }
 
   useEffect(() => {
     (async () => {
       try {
         setIsLoading(true);
         const res = await axios<GithubRepositories[]>(
-          `https://api.github.com/users/${GITHUB_ORGANIZATION_NAME}/repos`,
+          `${GITHUB_API_URL}/users/${GITHUB_ORGANIZATION_NAME}/repos`,
           {
             headers: {
               Authorization: `Bearer ${GITHUB_TOKEN}`,

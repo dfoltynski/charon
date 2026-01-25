@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useRef } from "react";
 import { debounce } from "../../utils/debounce";
 import { GITHUB_ORGANIZATION_NAME } from "../../utils/environment-variables";
+import { GITHUB_API_URL } from "../../config";
 
 interface UseValidateBranchDebouncedParams {
   selectedProject: string;
@@ -36,7 +37,7 @@ export const useValidateBranchDebounced = ({
     debounceFnRef.current = debounce(async (branch: string) => {
       try {
         const res = await axios(
-          `https://api.github.com/repos/${GITHUB_ORGANIZATION_NAME}/${selectedProject}/branches/${branch}`,
+          `${GITHUB_API_URL}/repos/${GITHUB_ORGANIZATION_NAME}/${selectedProject}/branches/${branch}`,
         );
         if (res.status !== 200) {
           setInvalidBranch(true);

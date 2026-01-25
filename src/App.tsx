@@ -1,5 +1,7 @@
 import { css } from "@emotion/css";
 import { HomePage } from "./home-page/HomePage";
+import { Route, Routes } from "react-router-dom";
+import { LoginPage } from "./login-page/LoginPage";
 
 const styles = {
   app: css({
@@ -13,7 +15,12 @@ const styles = {
 function App() {
   return (
     <div className={styles.app}>
-      <HomePage />
+      <Routes>
+        <Route path="*" element={<h1>404</h1>} />
+        <Route path="login" element={<LoginPage />} />
+
+        <Route path="manage" element={<HomePage />} />
+      </Routes>
     </div>
   );
 }
