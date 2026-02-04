@@ -3,13 +3,15 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { History } from "../components/history/History";
-import { GITHUB_API_URL } from "../config";
+import { API_URL, GITHUB_API_URL } from "../config";
 import { useValidateGithubAccessToken } from "../login-page/hooks/useValidateGithubAccessToken";
 import {
   GITHUB_ORGANIZATION_NAME,
   GITHUB_TOKEN,
 } from "../utils/environment-variables";
 import { useValidateBranchDebounced } from "./hooks/useValidateBranchDebounced";
+import { useCookies } from "react-cookie";
+import type { Environment } from "../utils/types";
 
 const styles = {
   projectSelectorContainer: css({
@@ -17,7 +19,7 @@ const styles = {
     height: "40px",
     padding: "10px",
     display: "flex",
-    alignItems: "center",
+    marginTop: "30%",
   }),
 
   selectWrap: css({
@@ -152,13 +154,15 @@ export const HomePage = () => {
   const [projects, setProjects] = useState<GithubRepositories[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState("");
-  const [environment, setEnvironment] = useState<string>("");
+  const [environment, setEnvironment] = useState<Environment>("staging");
   const [invalidBranch, setInvalidBranch] = useState(false);
   const isPreview = environment === "preview";
   const [branch, setBranch] = useState<string>("");
   const [hasError, setHasError] = useState(false);
   const navigate = useNavigate();
   const isTokenValid = useValidateGithubAccessToken();
+  const [cookies] = useCookies(["access_token", "token_type"]);
+
   if (!isTokenValid) {
     navigate("/login");
   }
@@ -208,7 +212,21 @@ export const HomePage = () => {
     if (next.length > 0) validateBranchDebounced.current?.(next);
   };
 
-  const deploy = () => {};
+  const deploy = async () => {
+    await axios.post(
+      `${API_URL}/deploy`,
+      {
+        branchName: branch,
+        projectName: selectedProject,
+        environment,
+      },
+      {
+        headers: {
+          Authorization: `${cookies.token_type} ${cookies.access_token}`,
+        },
+      },
+    );
+  };
 
   if (isLoading) {
     return <>Loading...</>;
@@ -270,7 +288,7 @@ export const HomePage = () => {
         Deploy!
       </button>
 
-      <History />
+      <History environment={environment} />
     </>
   );
 };
