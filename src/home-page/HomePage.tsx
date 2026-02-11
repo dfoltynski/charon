@@ -13,134 +13,257 @@ import { useValidateBranchDebounced } from "./hooks/useValidateBranchDebounced";
 import { useCookies } from "react-cookie";
 import type { Environment } from "../utils/types";
 
+const GREEN = "#32a852";
+
 const styles = {
-  projectSelectorContainer: css({
-    backgroundColor: "#666",
-    height: "40px",
-    padding: "10px",
+  page: css({
+    minHeight: "100vh",
+    padding: "56px 18px",
+    color: "rgba(255,255,255,0.88)",
     display: "flex",
-    marginTop: "30%",
+    justifyContent: "center",
+  }),
+
+  container: css({
+    width: "100%",
+    maxWidth: 1120,
+  }),
+
+  header: css({
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 16,
+    marginBottom: 16,
+  }),
+
+  title: css({
+    fontSize: 34,
+    fontWeight: 600,
+    letterSpacing: -0.3,
+    color: "rgba(255,255,255,0.92)",
+  }),
+
+  subtitle: css({
+    marginTop: 6,
+    fontSize: 14,
+    color: "rgba(255,255,255,0.55)",
+  }),
+
+  statusPill: css({
+    height: 40,
+    padding: "0 14px",
+    borderRadius: 999,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.10)",
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 14,
+    whiteSpace: "nowrap",
+  }),
+
+  dot: css({
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    background: GREEN,
+  }),
+
+  hero: css({
+    borderRadius: 16,
+    padding: 18,
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.10)",
+  }),
+
+  grid: css({
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: 14,
+    "@media (min-width: 900px)": {
+      gridTemplateColumns: "1.1fr 0.9fr",
+      gap: 16,
+      alignItems: "start",
+    },
+  }),
+
+  stack: css({
+    display: "grid",
+    gap: 12,
+  }),
+
+  card: css({
+    borderRadius: 14,
+    padding: 14,
+    background: "rgba(0,0,0,0.28)",
+    border: "1px solid rgba(255,255,255,0.08)",
+  }),
+
+  cardTitle: css({
+    fontSize: 13,
+    fontWeight: 600,
+    color: "rgba(255,255,255,0.62)",
+    letterSpacing: 0.2,
+    marginBottom: 10,
+  }),
+
+  // Form controls
+  control: css({
+    height: 54,
+    borderRadius: 12,
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.10)",
+
+    display: "flex",
+    alignItems: "center",
+    overflow: "hidden",
+    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+    "&:focus-within": {
+      borderColor: "rgba(255,255,255,0.18)",
+    },
   }),
 
   selectWrap: css({
     position: "relative",
-    width: "250px",
-    height: "40px",
-  }),
-
-  arrowBox: css({
-    position: "absolute",
-    right: 0,
-    top: 0,
-    width: "40px",
-    height: "40px",
-    background: "#666",
-    pointerEvents: "none",
-  }),
-
-  arrow: css({
-    position: "absolute",
-    right: "14px",
-    top: "50%",
-    transform: "translateY(-35%)",
-    width: 0,
-    height: 0,
-    borderLeft: "5px solid transparent",
-    borderRight: "5px solid transparent",
-    borderTop: "5px solid white",
-    pointerEvents: "none",
-    zIndex: 2,
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
   }),
 
   select: css({
     width: "100%",
-    height: "40px",
-    padding: "0 50px 0 10px",
-    background: "#666",
-    color: "#fff",
+    height: "100%",
+    padding: "0 54px 0 16px",
+    background: "transparent",
+    color: "rgba(255,255,255,0.92)",
     border: "none",
     outline: "none",
-    borderRadius: 0,
-    boxSizing: "border-box",
-    fontSize: "14px",
-
+    fontSize: 16,
     appearance: "none",
     WebkitAppearance: "none",
     MozAppearance: "none",
-
-    "&:hover": {
-      background: "#666",
-    },
-
-    "&:focus": {
-      boxShadow: "0 0 0 2px rgba(255,255,255,0.12)",
-    },
   }),
 
-  buttons: css({
-    display: "flex",
-    padding: "10px",
-    justifyContent: "space-between",
-    fontSize: 24,
-  }),
-  environment: css({
-    padding: "10px",
-  }),
-  active: css({
-    transition: "0.2s ease-in-out",
-    backgroundColor: "#32a852",
-  }),
-
-  branchSelectorContainer: css({
-    margin: "10px 0",
-  }),
-  branchInput: css({
+  input: css({
     width: "100%",
-    height: "40px",
-    padding: "0 50px 0 10px",
-    background: "#666",
-    color: "#fff",
-    border: "1px solid #666",
-    outline: "none",
-    boxSizing: "border-box",
-    fontSize: "14px",
-
-    "&:focus": {
-      boxShadow: "0 0 0 2px rgba(255,255,255,0.12)",
-    },
-  }),
-
-  branchInvalid: css({
-    border: "1px solid #d64545",
-    boxShadow: "0 0 0 1px rgba(214,69,69,0.6)",
-  }),
-
-  deployButton: css({
-    height: "40px",
+    height: "100%",
     padding: "0 16px",
-    backgroundColor: "#32a852",
-    color: "#fff",
+    background: "transparent",
+    color: "rgba(255,255,255,0.92)",
     border: "none",
     outline: "none",
-    fontSize: "14px",
+    fontSize: 16,
+    "&::placeholder": {
+      color: "rgba(255,255,255,0.35)",
+    },
+  }),
+
+  rightIconBox: css({
+    position: "absolute",
+    right: 0,
+    top: 0,
+    width: 54,
+    height: "100%",
+    display: "grid",
+    placeItems: "center",
+    borderLeft: "1px solid rgba(255,255,255,0.06)",
+    pointerEvents: "none",
+    background:
+      "linear-gradient(to left, rgba(255,255,255,0.05), rgba(255,255,255,0))",
+  }),
+
+  arrow: css({
+    width: 0,
+    height: 0,
+    borderLeft: "6px solid transparent",
+    borderRight: "6px solid transparent",
+    borderTop: "7px solid rgba(255,255,255,0.75)",
+    transform: "translateY(2px)",
+  }),
+
+  helper: css({
+    marginTop: 8,
+    fontSize: 12,
+    color: "rgba(255,255,255,0.45)",
+  }),
+
+  invalid: css({
+    borderColor: "rgba(214,69,69,0.75)",
+  }),
+
+  valid: css({
+    borderColor: "rgba(50,168,82,0.75)",
+  }),
+
+  // Env toggle
+  envGrid: css({
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 10,
+  }),
+
+  envBtn: css({
+    height: 54,
+    borderRadius: 12,
     cursor: "pointer",
-    boxSizing: "border-box",
+    userSelect: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 18,
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.10)",
+    color: "rgba(255,255,255,0.78)",
+
+    transition:
+      "transform 0.05s ease, background 0.15s ease, border 0.15s ease",
+    "&:hover": {
+      background: "rgba(255,255,255,0.10)",
+    },
+    "&:active": {
+      transform: "translateY(1px)",
+    },
+  }),
+
+  envActive: css({
+    background: `linear-gradient(180deg, ${GREEN}, #2c944a)`,
+    borderColor: "rgba(50,168,82,0.95)",
+    color: "#fff",
+  }),
+
+  // Deploy
+  deploy: css({
+    height: 58,
+    borderRadius: 14,
     width: "100%",
+    background: `linear-gradient(180deg, ${GREEN}, #2c944a)`,
+    color: "#fff",
+    border: "1px solid rgba(50,168,82,0.9)",
+    fontSize: 16,
+    fontWeight: 700,
+    cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
 
+    transition: "transform 0.05s ease, filter 0.15s ease",
     "&:hover": {
-      backgroundColor: "#2c944a",
+      filter: "brightness(1.02)",
     },
-
     "&:active": {
-      backgroundColor: "#257d3f",
+      transform: "translateY(1px)",
+      filter: "brightness(0.98)",
     },
-
     "&:focus": {
-      boxShadow: "0 0 0 2px rgba(255,255,255,0.12)",
+      outline: "none",
     },
+  }),
+
+  historyWrap: css({
+    marginTop: 18,
   }),
 };
 
@@ -154,14 +277,45 @@ export const HomePage = () => {
   const [projects, setProjects] = useState<GithubRepositories[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState("");
-  const [environment, setEnvironment] = useState<Environment>("staging");
+  const [environment, setEnvironment] = useState<Environment>("preview");
   const [invalidBranch, setInvalidBranch] = useState(false);
+  const [validBranch, setValidBranch] = useState(false);
   const isPreview = environment === "preview";
   const [branch, setBranch] = useState<string>("");
   const [hasError, setHasError] = useState(false);
+
   const navigate = useNavigate();
   const isTokenValid = useValidateGithubAccessToken();
   const [cookies] = useCookies(["access_token", "token_type"]);
+  const validateBranchDebounced = useValidateBranchDebounced({
+    branch,
+    selectedProject,
+    setInvalidBranch,
+    setValidBranch,
+    wait: 500,
+  });
+
+  const updateBranch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = e.target.value;
+    setBranch(next);
+    validateBranchDebounced.current?.(next);
+  };
+
+  const deploy = async () => {
+    await axios.post(
+      `${API_URL}/deploy`,
+      {
+        branchName: branch,
+        projectName: selectedProject,
+        environment,
+      },
+      {
+        headers: {
+          Authorization: `${cookies.token_type} ${cookies.access_token}`,
+        },
+      },
+    );
+  };
 
   if (!isTokenValid) {
     navigate("/login");
@@ -199,34 +353,9 @@ export const HomePage = () => {
     })();
   }, []);
 
-  const validateBranchDebounced = useValidateBranchDebounced({
-    branch,
-    selectedProject,
-    setInvalidBranch,
-    wait: 500,
-  });
-
-  const updateBranch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const next = e.target.value;
-    setBranch(next);
-    if (next.length > 0) validateBranchDebounced.current?.(next);
-  };
-
-  const deploy = async () => {
-    await axios.post(
-      `${API_URL}/deploy`,
-      {
-        branchName: branch,
-        projectName: selectedProject,
-        environment,
-      },
-      {
-        headers: {
-          Authorization: `${cookies.token_type} ${cookies.access_token}`,
-        },
-      },
-    );
-  };
+  useEffect(() => {
+    validateBranchDebounced.current?.(branch);
+  }, [branch, selectedProject, validateBranchDebounced]);
 
   if (isLoading) {
     return <>Loading...</>;
@@ -237,58 +366,110 @@ export const HomePage = () => {
   }
 
   return (
-    <>
-      <div className={styles.projectSelectorContainer}>
-        <div className={styles.selectWrap}>
-          <select
-            className={styles.select}
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-          >
-            {projects.map((p) => (
-              <option key={p.full_name} value={p.name}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <div>
+            <div className={styles.title}>Deploy</div>
+            <div className={styles.subtitle}>
+              Pick a project, set a branch, choose an environment — then ship.
+            </div>
+          </div>
 
-          <div className={styles.arrowBox} />
-          <div className={styles.arrow} />
+          <div className={styles.statusPill}>
+            <span className={styles.dot} />
+            {isPreview ? "Preview" : "Staging"}
+          </div>
         </div>
-      </div>
-      <div
-        className={`${invalidBranch && styles.branchInvalid} ${styles.projectSelectorContainer} ${styles.branchSelectorContainer} `}
-      >
-        <div className={styles.selectWrap}>
-          <input
-            type="text"
-            placeholder="branch-name"
-            value={branch}
-            onChange={updateBranch}
-            className={styles.branchInput}
-          />
-          <div className={styles.arrowBox} />
-        </div>
-      </div>
-      <div className={styles.buttons}>
-        <div
-          className={`${styles.environment} ${isPreview && styles.active}`}
-          onClick={() => setEnvironment("preview")}
-        >
-          Preview
-        </div>
-        <div
-          className={`${styles.environment} ${!isPreview && styles.active}`}
-          onClick={() => setEnvironment("staging")}
-        >
-          Staging
-        </div>
-      </div>
-      <button className={styles.deployButton} onClick={deploy}>
-        Deploy!
-      </button>
 
-      <History environment={environment} />
-    </>
+        <div className={styles.hero}>
+          <div className={styles.grid}>
+            {/* Left: Inputs */}
+            <div className={styles.stack}>
+              <div className={styles.card}>
+                <div className={styles.cardTitle}>Project</div>
+                <div className={styles.control}>
+                  <div className={styles.selectWrap}>
+                    <select
+                      className={styles.select}
+                      value={selectedProject}
+                      onChange={(e) => setSelectedProject(e.target.value)}
+                    >
+                      {projects.map((p: GithubRepositories) => (
+                        <option key={p.full_name} value={p.name}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className={styles.rightIconBox}>
+                      <div className={styles.arrow} />
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.helper}>
+                  This determines which repo/app will be deployed.
+                </div>
+              </div>
+
+              <div className={styles.card}>
+                <div className={styles.cardTitle}>Branch</div>
+                <div
+                  className={`${styles.control} ${
+                    invalidBranch ? styles.invalid : ""
+                  } ${validBranch ? styles.valid : ""}`}
+                >
+                  <input
+                    type="text"
+                    placeholder="branch-name"
+                    value={branch}
+                    onChange={updateBranch}
+                    className={styles.input}
+                  />
+                </div>
+                <div className={styles.helper}>
+                  Use an existing branch name (validated live).
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Environment + Deploy */}
+            <div className={styles.stack}>
+              <div className={styles.card}>
+                <div className={styles.cardTitle}>Environment</div>
+                <div className={styles.envGrid}>
+                  <div
+                    className={`${styles.envBtn} ${
+                      isPreview ? styles.envActive : ""
+                    }`}
+                    onClick={() => setEnvironment("preview")}
+                  >
+                    Preview
+                  </div>
+                  <div
+                    className={`${styles.envBtn} ${
+                      !isPreview ? styles.envActive : ""
+                    }`}
+                    onClick={() => setEnvironment("staging")}
+                  >
+                    Staging
+                  </div>
+                </div>
+                <div className={styles.helper}>
+                  Preview is safer. Staging is closer to prod.
+                </div>
+              </div>
+
+              <button className={styles.deploy} onClick={deploy}>
+                Deploy
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.historyWrap}>
+          <History environment={environment} />
+        </div>
+      </div>
+    </div>
   );
 };

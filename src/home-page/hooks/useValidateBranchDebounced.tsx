@@ -9,6 +9,7 @@ interface UseValidateBranchDebouncedParams {
   branch: string;
   wait: number;
   setInvalidBranch: (state: boolean) => void;
+  setValidBranch: (state: boolean) => void;
 }
 
 export const useValidateBranchDebounced = ({
@@ -16,15 +17,8 @@ export const useValidateBranchDebounced = ({
   branch,
   wait,
   setInvalidBranch,
+  setValidBranch,
 }: UseValidateBranchDebouncedParams) => {
-  console.log(
-    "useValidateBranchDebounced",
-    selectedProject,
-    branch,
-    wait,
-    setInvalidBranch,
-  );
-
   const latest = useRef({ selectedProject, branch });
 
   useEffect(() => {
@@ -36,22 +30,31 @@ export const useValidateBranchDebounced = ({
   useEffect(() => {
     debounceFnRef.current = debounce(async (branch: string) => {
       try {
+        console.log(branch.length <= 0, branch.length, branch);
+        if (branch.length <= 0) {
+          setInvalidBranch(false);
+          setValidBranch(false);
+          return;
+        }
         const res = await axios(
           `${GITHUB_API_URL}/repos/${GITHUB_ORGANIZATION_NAME}/${selectedProject}/branches/${branch}`,
         );
         if (res.status !== 200) {
           setInvalidBranch(true);
+          setValidBranch(false);
         } else {
           setInvalidBranch(false);
+          setValidBranch(true);
         }
       } catch (_e) {
         setInvalidBranch(true);
+        setValidBranch(false);
       }
     }, wait);
     return () => {
       debounceFnRef.current?.cancel();
     };
-  }, [wait, setInvalidBranch, selectedProject]);
+  }, [wait, setInvalidBranch, selectedProject, setValidBranch]);
 
   return debounceFnRef;
 };
