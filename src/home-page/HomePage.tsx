@@ -109,7 +109,6 @@ const styles = {
     marginBottom: 10,
   }),
 
-  // Form controls
   control: css({
     height: 54,
     borderRadius: 12,
@@ -171,8 +170,6 @@ const styles = {
     placeItems: "center",
     borderLeft: "1px solid rgba(255,255,255,0.06)",
     pointerEvents: "none",
-    background:
-      "linear-gradient(to left, rgba(255,255,255,0.05), rgba(255,255,255,0))",
   }),
 
   arrow: css({
@@ -198,7 +195,6 @@ const styles = {
     borderColor: "rgba(50,168,82,0.75)",
   }),
 
-  // Env toggle
   envGrid: css({
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -220,9 +216,6 @@ const styles = {
 
     transition:
       "transform 0.05s ease, background 0.15s ease, border 0.15s ease",
-    "&:hover": {
-      background: "rgba(255,255,255,0.10)",
-    },
     "&:active": {
       transform: "translateY(1px)",
     },
@@ -234,7 +227,6 @@ const styles = {
     color: "#fff",
   }),
 
-  // Deploy
   deploy: css({
     height: 58,
     borderRadius: 14,
@@ -264,6 +256,33 @@ const styles = {
 
   historyWrap: css({
     marginTop: 18,
+  }),
+
+  errorBanner: css({
+    borderRadius: 12,
+    padding: "12px 14px",
+    marginTop: 12,
+    background: "rgba(255,70,70,0.12)",
+    border: "1px solid rgba(255,70,70,0.35)",
+    color: "#ffb3b3",
+    fontSize: 14,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
+  }),
+
+  errorIcon: css({
+    width: 18,
+    height: 18,
+    borderRadius: 999,
+    background: "#ff4d4d",
+    display: "grid",
+    placeItems: "center",
+    fontWeight: 700,
+    color: "#111",
+    fontSize: 12,
+    flexShrink: 0,
   }),
 };
 
@@ -302,19 +321,28 @@ export const HomePage = () => {
   };
 
   const deploy = async () => {
-    await axios.post(
-      `${API_URL}/deploy`,
-      {
-        branchName: branch,
-        projectName: selectedProject,
-        environment,
-      },
-      {
-        headers: {
-          Authorization: `${cookies.token_type} ${cookies.access_token}`,
-        },
-      },
-    );
+    try {
+      if (branch.length > 0 && validBranch) {
+        setIsLoading(true);
+        await axios.post(
+          `${API_URL}/deploys`,
+          {
+            branchName: branch,
+            projectName: selectedProject,
+            environment,
+          },
+          {
+            headers: {
+              Authorization: `${cookies.token_type} ${cookies.access_token}`,
+            },
+          },
+        );
+      }
+      setIsLoading(false);
+    } catch (_e) {
+      setHasError(true);
+      setIsLoading(false);
+    }
   };
 
   if (!isTokenValid) {
@@ -357,14 +385,6 @@ export const HomePage = () => {
     validateBranchDebounced.current?.(branch);
   }, [branch, selectedProject, validateBranchDebounced]);
 
-  if (isLoading) {
-    return <>Loading...</>;
-  }
-
-  if (hasError) {
-    return <>An error has occured... Check configuration</>;
-  }
-
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -372,7 +392,7 @@ export const HomePage = () => {
           <div>
             <div className={styles.title}>Deploy</div>
             <div className={styles.subtitle}>
-              Pick a project, set a branch, choose an environment — then ship.
+              Pick a project, set a branch, choose an environment - then ship.
             </div>
           </div>
 
@@ -384,7 +404,6 @@ export const HomePage = () => {
 
         <div className={styles.hero}>
           <div className={styles.grid}>
-            {/* Left: Inputs */}
             <div className={styles.stack}>
               <div className={styles.card}>
                 <div className={styles.cardTitle}>Project</div>
@@ -407,7 +426,7 @@ export const HomePage = () => {
                   </div>
                 </div>
                 <div className={styles.helper}>
-                  This determines which repo/app will be deployed.
+                  This determines which repo will be deployed.
                 </div>
               </div>
 
@@ -432,7 +451,6 @@ export const HomePage = () => {
               </div>
             </div>
 
-            {/* Right: Environment + Deploy */}
             <div className={styles.stack}>
               <div className={styles.card}>
                 <div className={styles.cardTitle}>Environment</div>
@@ -459,9 +477,19 @@ export const HomePage = () => {
                 </div>
               </div>
 
-              <button className={styles.deploy} onClick={deploy}>
-                Deploy
+              <button
+                className={styles.deploy}
+                onClick={deploy}
+                disabled={isLoading}
+              >
+                {isLoading ? "Deploying..." : "Deploy"}
               </button>
+              {hasError && (
+                <div className={styles.errorBanner}>
+                  <div className={styles.errorIcon}>!</div>
+                  Deployment failed. Check logs and try again.
+                </div>
+              )}
             </div>
           </div>
         </div>
