@@ -1,18 +1,8 @@
-import { useEffect, useState } from "react";
-import { API_URL } from "../../config";
-import axios from "axios";
-import type { Environment, HistoryData } from "../../utils/types";
-import { useCookies } from "react-cookie";
 import { css } from "@emotion/css";
-
-interface HistoryProps {
-  environment: Environment;
-}
-
-interface HistoryResponse {
-  history: HistoryData[];
-  count: number;
-}
+import axios from "axios";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCookies } from "react-cookie";
+import { API_URL } from "../../config";
 
 const GREEN = "#32a852";
 
@@ -109,61 +99,161 @@ const styles = {
     display: "flex",
     gap: 10,
     marginTop: 12,
+    flexWrap: "wrap",
+    alignItems: "center",
   }),
 
   pageBtn: css({
-    width: 44,
-    height: 44,
+    height: 40,
+    padding: "0 14px",
     borderRadius: 12,
-    display: "grid",
-    placeItems: "center",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+
     cursor: "pointer",
     userSelect: "none",
+
     background: "rgba(255,255,255,0.06)",
     border: "1px solid rgba(255,255,255,0.10)",
-    color: "rgba(255,255,255,0.80)",
+    color: "rgba(255,255,255,0.86)",
+
     boxShadow: "0 10px 24px rgba(0,0,0,0.25)",
-    transition: "transform 0.05s ease, background 0.15s ease",
+    transition:
+      "transform 0.06s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease",
+
     "&:hover": {
       background: "rgba(255,255,255,0.10)",
+      borderColor: "rgba(255,255,255,0.14)",
     },
+
     "&:active": {
       transform: "translateY(1px)",
     },
+
+    "&:focus-visible": {
+      outline: "none",
+      boxShadow:
+        "0 10px 24px rgba(0,0,0,0.25), 0 0 0 3px rgba(255,255,255,0.18)",
+      borderColor: "rgba(255,255,255,0.22)",
+    },
   }),
 
-  activePage: css({
+  primaryBtn: css({
     background: `linear-gradient(180deg, ${GREEN}, #2c944a)`,
     borderColor: "rgba(50,168,82,0.95)",
     color: "#fff",
     boxShadow: "0 16px 32px rgba(0,0,0,0.40), 0 0 0 2px rgba(50,168,82,0.18)",
+
+    "&:hover": {
+      background: `linear-gradient(180deg, #3ad46b, ${GREEN})`,
+      borderColor: "rgba(58,212,107,0.95)",
+    },
+
+    "&:focus-visible": {
+      boxShadow: "0 16px 32px rgba(0,0,0,0.40), 0 0 0 3px rgba(50,168,82,0.25)",
+    },
+  }),
+
+  disabledPage: css({
+    cursor: "not-allowed",
+    opacity: 0.55,
+    background: "rgba(255,255,255,0.04)",
+    borderColor: "rgba(255,255,255,0.08)",
+    boxShadow: "none",
+    transform: "none",
+
+    "&:hover": {
+      background: "rgba(255,255,255,0.04)",
+      borderColor: "rgba(255,255,255,0.08)",
+    },
+
+    "&:active": {
+      transform: "none",
+    },
   }),
 };
-
 const RES_PER_PAGE = 5;
+
+export type HistoryData = {
+  id: string;
+  environment: string;
+  name: string | null;
+  time: string;
+  commitsha: string | null;
+  projectname: string | null;
+};
+
+export type HistoryResponse = {
+  history: HistoryData[];
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
+type HistoryProps = {
+  environment: string;
+};
 
 export const History = ({ environment }: HistoryProps) => {
   const [cookies] = useCookies(["access_token", "token_type"]);
+
   const [history, setHistory] = useState<HistoryData[]>([]);
-  const [count, setCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const PAGES_NUMBER = Math.ceil(count / RES_PER_PAGE);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+
+  const [browsingOlder, setBrowsingOlder] = useState(false);
+
+  const authHeader = useMemo(() => {
+    const t = cookies.token_type;
+    const a = cookies.access_token;
+    return t && a ? `${t} ${a}` : "";
+  }, [cookies.token_type, cookies.access_token]);
+
+  const fetchFirstPage = useCallback(async () => {
+    const res = await axios.get<HistoryResponse>(
+      `${API_URL}/history?environment=${encodeURIComponent(environment)}&limit=${RES_PER_PAGE}`,
+      {
+        headers: { Authorization: authHeader },
+      },
+    );
+
+    setHistory(res.data.history);
+    setNextCursor(res.data.nextCursor);
+    setHasMore(res.data.hasMore);
+    setBrowsingOlder(false);
+  }, [authHeader, environment]);
+
+  const fetchNextPage = useCallback(async () => {
+    if (!nextCursor) return;
+
+    const res = await axios.get<HistoryResponse>(
+      `${API_URL}/history?environment=${encodeURIComponent(environment)}&limit=${RES_PER_PAGE}&cursor=${encodeURIComponent(nextCursor)}`,
+      {
+        headers: { Authorization: authHeader },
+      },
+    );
+
+    setHistory((prev) => [...prev, ...res.data.history]);
+    setNextCursor(res.data.nextCursor);
+    setHasMore(res.data.hasMore);
+    setBrowsingOlder(true);
+  }, [authHeader, environment, nextCursor]);
 
   useEffect(() => {
-    (async () => {
-      const history = await axios.get<HistoryResponse>(
-        `${API_URL}/history?environment=${environment}&page=${currentPage}&limit=${RES_PER_PAGE}`,
-        {
-          headers: {
-            Authorization: `${cookies.token_type} ${cookies.access_token}`,
-          },
-        },
-      );
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchFirstPage();
+  }, [fetchFirstPage]);
 
-      setHistory(history.data.history);
-      setCount(history.data.count);
-    })();
-  }, [setHistory, cookies, environment, currentPage]);
+  useEffect(() => {
+    if (browsingOlder) return;
+
+    const interval = setInterval(() => {
+      fetchFirstPage();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [fetchFirstPage, browsingOlder]);
 
   return (
     <div className={styles.historySection}>
@@ -181,7 +271,7 @@ export const History = ({ environment }: HistoryProps) => {
             </thead>
 
             <tbody>
-              {history.map((h: HistoryData, i: number) => (
+              {history.map((h, i) => (
                 <tr key={i} className={styles.tr}>
                   <td className={styles.tdMuted}>{h.name}</td>
 
@@ -202,20 +292,40 @@ export const History = ({ environment }: HistoryProps) => {
       </div>
 
       <div className={styles.pages}>
-        {[...Array(PAGES_NUMBER)].map((_, i) => {
-          const page = i + 1;
-          return (
-            <div
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`${styles.pageBtn} ${
-                currentPage === page ? styles.activePage : ""
-              }`}
-            >
-              {page}
-            </div>
-          );
-        })}
+        <div
+          className={styles.pageBtn}
+          onClick={fetchFirstPage}
+          role="button"
+          tabIndex={0}
+        >
+          Refresh
+        </div>
+
+        <div
+          className={`${styles.pageBtn} ${styles.primaryBtn} ${
+            !hasMore ? styles.disabledPage : ""
+          }`}
+          onClick={() => {
+            if (!hasMore) return;
+            fetchNextPage();
+          }}
+          role="button"
+          tabIndex={0}
+          aria-disabled={!hasMore}
+        >
+          {hasMore ? "Load more" : "No more"}
+        </div>
+
+        {browsingOlder && (
+          <div
+            className={styles.pageBtn}
+            onClick={fetchFirstPage}
+            role="button"
+            tabIndex={0}
+          >
+            Back to latest
+          </div>
+        )}
       </div>
     </div>
   );

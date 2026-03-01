@@ -119,9 +119,6 @@ const styles = {
     alignItems: "center",
     overflow: "hidden",
     transition: "border-color 0.15s ease, box-shadow 0.15s ease",
-    "&:focus-within": {
-      borderColor: "rgba(255,255,255,0.18)",
-    },
   }),
 
   selectWrap: css({
@@ -325,7 +322,7 @@ export const HomePage = () => {
       if (branch.length > 0 && validBranch) {
         setIsLoading(true);
         await axios.post(
-          `${API_URL}/deploys`,
+          `${API_URL}/deploy`,
           {
             branchName: branch,
             projectName: selectedProject,
@@ -339,6 +336,7 @@ export const HomePage = () => {
         );
       }
       setIsLoading(false);
+      setHasError(false);
     } catch (_e) {
       setHasError(true);
       setIsLoading(false);
