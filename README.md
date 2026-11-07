@@ -1,6 +1,6 @@
 # charon
 
-Frontend for a small deploy manager. Sign in with GitHub, pick a repository, branch and environment, then trigger a deploy and browse the history. The backend is [thanatos](https://github.com/dfoltynski/thanatos), which does the building and container work.
+Frontend for a small deploy manager, built for my engineering degree. Sign in with GitHub, pick a repository, branch and environment, then trigger a deploy and browse the history. The backend is [thanatos](https://github.com/dfoltynski/thanatos), which does the building and container work.
 
 ## Features
 
