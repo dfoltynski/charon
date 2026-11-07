@@ -14,10 +14,10 @@ React, TypeScript, Vite, React Router, Emotion, Axios. A Dockerfile is included.
 
 ## Run it
 
-Requires Node (see `.nvmrc`) and a running thanatos instance.
+Requires Node (see `.nvmrc`), pnpm and a running thanatos instance.
 
 ```bash
 cp .env.example .env   # fill in GitHub values
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
