@@ -3,12 +3,8 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { History } from "../components/history/History";
-import { API_URL, GITHUB_API_URL } from "../config";
+import { API_URL } from "../config";
 import { useValidateGithubAccessToken } from "../login-page/hooks/useValidateGithubAccessToken";
-import {
-  GITHUB_ORGANIZATION_NAME,
-  GITHUB_TOKEN,
-} from "../utils/environment-variables";
 import { useValidateBranchDebounced } from "./hooks/useValidateBranchDebounced";
 import { useCookies } from "react-cookie";
 import type { Environment } from "../utils/types";
@@ -352,12 +348,10 @@ export const HomePage = () => {
       try {
         setIsLoading(true);
         const res = await axios<GithubRepositories[]>(
-          `${GITHUB_API_URL}/users/${GITHUB_ORGANIZATION_NAME}/repos`,
+          `${API_URL}/deploy/projects`,
           {
             headers: {
-              Authorization: `Bearer ${GITHUB_TOKEN}`,
-              Accept: "application/vnd.github+json",
-              "X-GitHub-Api-Version": "2022-11-28",
+              Authorization: `${cookies.token_type} ${cookies.access_token}`,
             },
           },
         );
@@ -377,7 +371,7 @@ export const HomePage = () => {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [cookies.access_token, cookies.token_type]);
 
   useEffect(() => {
     validateBranchDebounced.current?.(branch);
