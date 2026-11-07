@@ -1,6 +1,6 @@
 # charon
 
-Operator console for the [thanatos](https://github.com/dfoltynski/thanatos) deployment orchestrator. Operators sign in with GitHub, choose a repository, branch and environment, ship it, and review release history per environment. Designed and built for my engineering degree.
+Proof-of-concept operator console for the [thanatos](https://github.com/dfoltynski/thanatos) deployment orchestrator. Operators sign in with GitHub, choose a repository, branch and environment, ship it, and review release history per environment. Designed and built for my engineering degree. It is a proof of concept, not a finished product.
 
 ## Features
 
