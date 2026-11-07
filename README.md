@@ -1,12 +1,12 @@
 # charon
 
-Frontend for a small deploy manager, built for my engineering degree. Sign in with GitHub, pick a repository, branch and environment, then trigger a deploy and browse the history. The backend is [thanatos](https://github.com/dfoltynski/thanatos), which does the building and container work.
+Operator console for the [thanatos](https://github.com/dfoltynski/thanatos) deployment orchestrator. Operators sign in with GitHub, choose a repository, branch and environment, ship it, and review release history per environment. Designed and built for my engineering degree.
 
 ## Features
 
-- GitHub OAuth login with token validation
-- Debounced branch validation before a deploy
-- Deploy history per environment, with pagination
+- GitHub OAuth sign-in with session token validation
+- Live, debounced branch validation before a deploy can start
+- Paginated release history per environment
 
 ## Stack
 
